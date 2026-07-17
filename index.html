@@ -86,33 +86,6 @@
             line-height: 1.3;
         }
 
-        /* Fake Bank Demo Notice */
-        .demo-notice-banner {
-            background: rgba(245, 158, 11, 0.1);
-            border: 1px dashed var(--warning-amber);
-            border-radius: 12px;
-            padding: 12px;
-            text-align: center;
-            margin-top: 1.5rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .demo-notice-title {
-            color: var(--warning-amber);
-            font-size: 0.85rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 2px;
-        }
-
-        .demo-notice-text {
-            color: var(--text-secondary);
-            font-size: 0.8rem;
-            font-weight: 500;
-            line-height: 1.4;
-        }
-
         .login-form {
             display: flex;
             flex-direction: column;
@@ -611,11 +584,6 @@
                     <rect x="35" y="35" width="30" height="30" fill="#117aca"/>
                 </svg>
                 <h1 class="welcome-heading">Welcome to Chase<br>Mobile Banking</h1>
-                
-                <div class="demo-notice-banner">
-                    <div class="demo-notice-title">Notice</div>
-                    <div class="demo-notice-text">This is a fake bank UI design built for demonstration purposes only.</div>
-                </div>
             </div>
 
             <div class="login-form">
@@ -639,10 +607,10 @@
 
         <header class="app-header">
             <div class="user-profile">
-                <div class="avatar">P</div>
+                <div class="avatar">A</div>
                 <div>
                     <p class="greeting">Welcome back</p>
-                    <p class="username">Peter Herbert/ Catherine</p>
+                    <p class="username">Alice</p>
                 </div>
             </div>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2">
@@ -655,7 +623,7 @@
                 <div id="cardChecking" class="account-card active-card" onclick="selectActiveAccount('checking')">
                     <div class="account-type">Total Checking <span class="account-number">(...4820)</span></div>
                     <div class="balance-row">
-                        <span id="balCheckingText" class="main-balance">$50,626.67</span>
+                        <span id="balCheckingText" class="main-balance">$47,674.00</span>
                         <button class="eye-btn" onclick="toggleBalanceMask(event)" aria-label="Toggle Mask">
                             <svg class="eyeIconSvg" viewBox="0 0 24 24"></svg>
                         </button>
@@ -741,8 +709,9 @@
     </div>
 
     <script>
+        const targetMaxBalance = 47674.00;
         const originalBalances = {
-            checking: "$3,074,901",
+            checking: "$47,674.00",
             savings: "$12,450.00",
             credit: "$420.15"
         };
@@ -757,17 +726,15 @@
         let filteredTransactionPool = [];
         let currentlyRenderedCount = 0;
         let isFetchingMoreData = false;
-        const batchSize = 8; // Loads exactly 8 at once
+        const batchSize = 6; 
         let currentAccountScope = 'checking';
 
-        // Custom variants satisfying specified titles and strictly using "+" deposits
-        const narrativeVariants = [
-            { title: "Incoming transfer deposited", value: "+$1,250.00" },
-            { title: "Investment", value: "+$3,400.00" },
-            { title: "Incoming transfer deposited", value: "+$750.50" },
-            { title: "Investment", value: "+$1,120.00" },
-            { title: "Incoming transfer deposited", value: "+$2,840.00" },
-            { title: "Investment", value: "+$5,000.00" }
+        const narrativeTitles = [
+            "Incoming transfer deposited",
+            "Investment Settlement",
+            "Direct Deposit Payroll",
+            "Secure Asset Transfer",
+            "Dividend Reinvestment"
         ];
 
         function executeLoginFlow() {
@@ -776,7 +743,7 @@
             const loader = document.getElementById("loadingOverlay");
             const loginScr = document.getElementById("loginScreen");
 
-            if (userIn === "Herbertpeter" && passIn === "926081") {
+            if (userIn === "Alice" && passIn === "926081") {
                 loader.classList.add("visible");
                 setTimeout(() => {
                     loader.classList.remove("visible");
@@ -859,17 +826,28 @@
             }
         }
 
-        // Generate exactly 52 historical logs running backward sequentially
+        // Dynamically initialize master logs pool ensuring the mathematical boundaries are kept
         function initializeMasterPool() {
             const operationalMonths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
             let currentYear = 2026;
-            let monthIndex = 5; // Start around June
-            let dayCounter = 28;
+            let monthIndex = 6; 
+            let dayCounter = 15;
+            
+            let accumulatedTransactionSum = 0;
 
-            for (let i = 0; i < 52; i++) {
-                let variant = narrativeVariants[i % narrativeVariants.length];
-                
-                dayCounter -= Math.floor(Math.random() * 3) + i % 2 + 1;
+            // Continues generating only until the total transaction value gets close to the principal balance
+            while (accumulatedTransactionSum < targetMaxBalance) {
+                // Generates random value precisely matching the specified $500 to $1040 threshold
+                let randomAmount = (Math.random() * (1040 - 500) + 500).toFixed(2);
+                let numericValue = parseFloat(randomAmount);
+
+                if (accumulatedTransactionSum + numericValue > targetMaxBalance) {
+                    break; // Hard block to ensure calculation can never exceed the total checking principal balance
+                }
+
+                accumulatedTransactionSum += numericValue;
+
+                dayCounter -= Math.floor(Math.random() * 2) + 1;
                 if (dayCounter <= 0) {
                     monthIndex--;
                     if (monthIndex < 0) {
@@ -879,10 +857,12 @@
                     dayCounter = 28;
                 }
 
+                let randomTitle = narrativeTitles[Math.floor(Math.random() * narrativeTitles.length)];
+
                 masterTransactionPool.push({
                     date: `${operationalMonths[monthIndex]} ${dayCounter}, ${currentYear}`,
-                    title: variant.title,
-                    value: variant.value
+                    title: randomTitle,
+                    value: `+$${numericValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                 });
             }
 
@@ -927,7 +907,6 @@
             container.insertAdjacentHTML('beforeend', appendedData);
             currentlyRenderedCount = upperLimit;
 
-            // Check if we hit the limit of 52 items
             if (currentlyRenderedCount >= filteredTransactionPool.length && filteredTransactionPool.length > 0) {
                 endPageMsg.style.display = "block";
             }
@@ -947,7 +926,7 @@
                     renderNextBatch(false);
                     loader.classList.remove("active");
                     isFetchingMoreData = false;
-                }, 1200);
+                }, 1000);
             }
         }
 
