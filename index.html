@@ -1,50 +1,361 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Site Locked</title>
-  <style>
-    body {
-      margin: 0;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background-color: #0f172a;
-      color: #f8fafc;
-      font-family: system-ui, -apple-system, sans-serif;
-      text-align: center;
-    }
-    .card {
-      background: #1e293b;
-      padding: 2.5rem;
-      border-radius: 12px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-      max-width: 320px;
-    }
-    .icon {
-      font-size: 3rem;
-      margin-bottom: 0.5rem;
-    }
-    h1 {
-      margin: 0 0 0.5rem 0;
-      font-size: 1.5rem;
-    }
-    p {
-      margin: 0;
-      color: #94a3b8;
-      font-size: 1rem;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank of America Mobile</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bofa-red: #dc1431;
+            --bofa-blue: #012169;
+            --bg-gray: #f4f7f9;
+            --text-dark: #000;
+            --text-gray: #666;
+            --border: #e1e4e8;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #ccc; 
+            margin: 0; 
+            display: flex; 
+            justify-content: center; 
+        }
+
+        /* Screens */
+        #biometric-screen, #login-screen, #receipt-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: white;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        #login-screen, #receipt-screen { display: none; z-index: 9999; padding-top: 20px; justify-content: flex-start; }
+
+        .app-container {
+            width: 100%; 
+            max-width: 420px; 
+            background: var(--bg-gray); 
+            min-height: 100vh;
+            position: relative; 
+            padding-bottom: 100px;
+            display: none;
+        }
+
+        /* Navigation */
+        .top-nav {
+            background: white;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav-icons { display: flex; gap: 20px; text-align: center; }
+        .nav-item { font-size: 10px; color: var(--text-gray); cursor: pointer; display: flex; flex-direction: column; align-items: center; }
+        .nav-item svg { margin-bottom: 2px; }
+
+        .sub-nav {
+            background: white;
+            display: flex;
+            border-bottom: 1px solid var(--border);
+        }
+        .sub-nav div {
+            flex: 1;
+            text-align: center;
+            padding: 15px 0;
+            font-size: 14px;
+            color: var(--text-gray);
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .sub-nav .active {
+            color: var(--bofa-red);
+            border-bottom: 3px solid var(--bofa-red);
+        }
+
+        /* Search Bar */
+        .search-container { padding: 15px; display: flex; align-items: center; gap: 10px; }
+        .search-box {
+            flex: 1;
+            background: #e9ecef;
+            border-radius: 8px;
+            padding: 10px 15px;
+            font-size: 14px;
+            color: var(--text-gray);
+            display: flex;
+            align-items: center;
+        }
+
+        /* Cards */
+        .white-card {
+            background: white;
+            margin: 0 15px 15px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #eee;
+        }
+        .list-item {
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Account Card */
+        .acc-card { margin: 0 15px 15px; border-radius: 12px; overflow: hidden; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.05); cursor: pointer; }
+        .acc-header { background: var(--bofa-red); color: white; padding: 12px 15px; font-weight: 700; font-size: 16px; }
+        .acc-body { padding: 15px; position: relative; }
+        .acc-type { color: var(--text-gray); font-size: 12px; margin-bottom: 5px; }
+        .acc-balance { font-size: 24px; font-weight: 700; color: #000; }
+        .view-badge {
+            position: absolute;
+            right: 15px; top: 25px;
+            background: #e9ecef;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--bofa-blue);
+        }
+        .acc-footer {
+            padding: 12px;
+            text-align: center;
+            border-top: 1px solid #f0f0f0;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--bofa-blue);
+            text-transform: uppercase;
+        }
+
+        /* Transfer Modal */
+        #transfer-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 20000; justify-content: center; align-items: center; }
+        .modal-box { background: white; width: 85%; max-width: 340px; padding: 25px; border-radius: 20px; text-align: center; }
+        .transfer-input { width: 90%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; font-family: 'Inter', sans-serif; }
+
+        /* Login Elements */
+        .login-logo { color: var(--bofa-red); font-weight: 800; font-size: 22px; margin-bottom: 40px; }
+        .input-box { width: 80%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .login-btn { width: 85%; background: var(--bofa-blue); color: white; padding: 14px; border: none; border-radius: 25px; font-weight: 700; cursor: pointer; }
+
+        /* Receipt styling */
+        .receipt-card { background: #fff; width: 80%; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-top: 50px; }
+        .receipt-success { color: #28a745; font-size: 50px; margin-bottom: 10px; }
+
+        /* Bottom Nav */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0; width: 100%; max-width: 420px;
+            background: white;
+            display: flex;
+            justify-style: space-around;
+            padding: 10px 0 25px;
+            border-top: 1px solid #ddd;
+        }
+        .b-nav-item { text-align: center; font-size: 10px; color: var(--text-gray); cursor: pointer; display: flex; flex-direction: column; align-items: center; }
+        .b-nav-item.active { color: var(--bofa-blue); font-weight: 700; }
+        .b-nav-item svg { margin-bottom: 3px; }
+    </style>
 </head>
 <body>
 
-  <div class="card">
-    <div class="icon">🔒</div>
-    <h1>Site Locked</h1>
-    <p>Contact the owner</p>
-  </div>
+<div id="biometric-screen">
+    <div style="width:70px; height:70px; border:2px solid #007aff; border-radius:15px; display:flex; align-items:center; justify-content:center; margin-bottom:20px;">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#007aff" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path><path d="M8 7v10M12 8v8M16 7v10"></path></svg>
+    </div>
+    <h3>Sign In</h3>
+    <p style="color:#666; font-size:14px;">Authenticating...</p>
+</div>
+
+<div id="login-screen">
+    <div class="login-logo">BANK OF AMERICA</div>
+    <input type="text" placeholder="Online ID" class="input-box" id="u-id">
+    <input type="password" placeholder="Passcode" class="input-box" id="u-ps">
+    <button class="login-btn" onclick="doLogin()">Log In</button>
+</div>
+
+<div id="receipt-screen">
+    <div class="receipt-card">
+        <div class="receipt-success">✓</div>
+        <h2 style="margin:0;">Transfer Successful</h2>
+        <p style="color:#666; margin-bottom:30px;">Your transaction has been processed.</p>
+        <div style="text-align:left; font-size:14px; border-top:1px dashed #ccc; padding-top:20px;">
+            <p><strong>To:</strong> <span id="rec-name">---</span></p>
+            <p><strong>Amount:</strong> <span id="rec-amount">---</span></p>
+            <p><strong>Date:</strong> <span id="rec-date">---</span></p>
+            <p><strong>Ref:</strong> <span id="rec-ref">---</span></p>
+        </div>
+        <button class="login-btn" onclick="closeReceipt()" style="margin-top:30px; background:var(--bofa-red);">Done</button>
+    </div>
+</div>
+
+<div id="transfer-modal">
+    <div class="modal-box">
+        <h3>New Transfer</h3>
+        <input type="text" id="t-recipient" placeholder="Recipient Name" class="transfer-input">
+        <input type="number" id="t-amount" placeholder="Amount ($)" class="transfer-input">
+        <button class="login-btn" onclick="processTransfer()" style="width:100%; margin-top:10px;">Send Funds</button>
+        <button onclick="closeTransfer()" style="margin-top:20px; border:none; background:none; color:var(--bofa-red); font-weight:700;">Cancel</button>
+    </div>
+</div>
+
+<div class="app-container" id="main-app">
+    <div class="top-nav">
+        <div style="font-size: 14px; font-weight: bold; color: var(--text-gray); display: flex; align-items: center; gap: 6px; cursor: pointer;" onclick="alert('Menu Opened')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            <span style="font-size:12px; vertical-align:middle;">Menu</span>
+        </div>
+        <div class="nav-icons">
+            <div class="nav-item" onclick="alert('No new messages')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                <span>Inbox</span>
+            </div>
+            <div class="nav-item" onclick="alert('Products currently unavailable')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                <span>Products</span>
+            </div>
+            <div class="nav-item" onclick="location.reload()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                <span>Log Out</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="sub-nav">
+        <div class="active" onclick="alert('Transaction History is currently locked for this account.')">Accounts</div>
+        <div onclick="alert('Dashboard view loaded')">Dashboard</div>
+    </div>
+
+    <div class="search-container">
+        <div class="search-box" onclick="alert('Search active')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <span>How can we help?</span>
+        </div>
+        <div style="background:var(--bofa-red); width:35px; height:35px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; cursor:pointer;" onclick="alert('Erica Assistant Launched')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </div>
+    </div>
+
+    <div class="white-card">
+        <div class="list-item" onclick="alert('Profile Settings')"><span>Hello, Hailey Moore</span> <span>&gt;</span></div>
+        <div class="list-item" style="font-weight:400; font-size:13px;" onclick="alert('Life Plan Details')">
+            <span style="display:flex; align-items:center;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 5px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                Bank of America Life Plan®
+            </span> 
+            <span>&gt;</span>
+        </div>
+        <div class="list-item" onclick="alert('Rewards Balance: $0.00')"><span>My Rewards</span> <span>&gt;</span></div>
+    </div>
+
+    <div class="acc-card" onclick="openTransfer()">
+        <div class="acc-header">Bank of America</div>
+        <div class="acc-body">
+            <div class="acc-type">Adv Plus Banking - 5542</div>
+            <div class="acc-balance" id="display-balance">$0.00</div>
+            <div class="view-badge">VIEW</div>
+        </div>
+        <div class="acc-footer" onclick="event.stopPropagation(); alert('Transaction History Locked: Please contact your local branch.')">View History</div>
+    </div>
+
+    <nav class="bottom-nav">
+        <div class="b-nav-item active">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="21" x2="21" y2="21"></line><line x1="3" y1="10" x2="21" y2="10"></line><polyline points="12 3 2 10 22 10"></polyline><line x1="6" y1="10" x2="6" y2="21"></line><line x1="10" y1="10" x2="10" y2="21"></line><line x1="14" y1="10" x2="14" y2="21"></line><line x1="18" y1="10" x2="18" y2="21"></line></svg>
+            <span>Accounts</span>
+        </div>
+        <div class="b-nav-item" onclick="openTransfer()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+            <span>Transfer | Zelle®</span>
+        </div>
+        <div class="b-nav-item" onclick="alert('Bill Pay is currently locked')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            <span>Bill Pay</span>
+        </div>
+        <div class="b-nav-item" onclick="alert('Camera access required')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+            <span>Deposit</span>
+        </div>
+    </nav>
+</div>
+
+<script>
+    // Persistent Storage
+    let currentBalance = localStorage.getItem('bofa_balance');
+    if (currentBalance === null) {
+        currentBalance = 23287.02;
+        localStorage.setItem('bofa_balance', currentBalance);
+    } else {
+        currentBalance = parseFloat(currentBalance);
+    }
+
+    function updateUI() {
+        document.getElementById('display-balance').innerText = '$' + currentBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+
+    function doLogin() {
+        const userId = document.getElementById('u-id').value;
+        const password = document.getElementById('u-ps').value;
+        
+        if(userId === "Moore" && password === "926081") {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('main-app').style.display = 'block';
+            updateUI();
+        } else {
+            alert("Invalid Online ID or Passcode.");
+        }
+    }
+
+    // Transfer Logic
+    function openTransfer() { document.getElementById('transfer-modal').style.display = 'flex'; }
+    function closeTransfer() { document.getElementById('transfer-modal').style.display = 'none'; }
+
+    function processTransfer() {
+        const name = document.getElementById('t-recipient').value;
+        const amt = parseFloat(document.getElementById('t-amount').value);
+
+        if (!name || isNaN(amt) || amt <= 0) {
+            alert("Please enter a valid name and amount.");
+            return;
+        }
+
+        if (amt > currentBalance) {
+            alert("Insufficient funds.");
+            return;
+        }
+
+        // Deduct money and save
+        currentBalance -= amt;
+        localStorage.setItem('bofa_balance', currentBalance);
+        updateUI();
+
+        // Generate Receipt
+        document.getElementById('rec-name').innerText = name;
+        document.getElementById('rec-amount').innerText = '$' + amt.toLocaleString();
+        document.getElementById('rec-date').innerText = new Date().toLocaleString();
+        document.getElementById('rec-ref').innerText = 'BOFA-' + Math.floor(Math.random() * 1000000000);
+
+        closeTransfer();
+        document.getElementById('receipt-screen').style.display = 'flex';
+    }
+
+    function closeReceipt() { document.getElementById('receipt-screen').style.display = 'none'; }
+
+    setTimeout(() => {
+        document.getElementById('biometric-screen').style.display = 'none';
+        document.getElementById('login-screen').style.display = 'flex';
+    }, 2000);
+</script>
 
 </body>
 </html>
